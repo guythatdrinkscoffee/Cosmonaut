@@ -39,7 +39,6 @@ extension Item {
         
         do {
             let jsonData = try Data(contentsOf: fileUrl)
-            print(String(data: jsonData, encoding: .utf8)!)
             let results = try JSONDecoder().decode([Item].self, from: jsonData)
             return results
         } catch {

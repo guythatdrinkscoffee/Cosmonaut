@@ -22,7 +22,6 @@ class CTMainTabVC: UITabBarController {
 extension CTMainTabVC {
     private func configureViewController(){
         self.tabBar.tintColor = .systemGray
-        self.tabBar.barTintColor = .black
     }
     
     private func configureViewControllers(){

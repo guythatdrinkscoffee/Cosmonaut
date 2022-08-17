@@ -13,7 +13,7 @@ class CTItemCell: UICollectionViewCell {
     
     public var item: Item? {
         didSet {
-            
+            self.configureForItem()
         }
     }
     
@@ -33,7 +33,7 @@ class CTItemCell: UICollectionViewCell {
     private lazy var gradient : CAGradientLayer = {
         let layer = CAGradientLayer()
         layer.frame = contentView.bounds
-        layer.colors = [UIColor.black.withAlphaComponent(0.6).cgColor,
+        layer.colors = [UIColor.black.withAlphaComponent(0.7).cgColor,
                         UIColor.black.withAlphaComponent(0).cgColor]
         return layer
     }()
@@ -42,7 +42,7 @@ class CTItemCell: UICollectionViewCell {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
         label.font = .systemFont(ofSize: 14, weight: .bold)
-        label.textColor = .white
+        label.textColor = .systemGray
         return label
     }()
     
@@ -50,7 +50,7 @@ class CTItemCell: UICollectionViewCell {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
         label.font = .preferredFont(forTextStyle: .footnote)
-        label.textColor = .white
+        label.textColor = .systemGray
         return label
     }()
     
@@ -58,7 +58,7 @@ class CTItemCell: UICollectionViewCell {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
         label.font = .preferredFont(forTextStyle: .footnote)
-        label.textColor = .white
+        label.textColor = .systemGray
         return label
     }()
     
@@ -73,9 +73,10 @@ class CTItemCell: UICollectionViewCell {
     
     // MARK: - Life cycle
     override init(frame: CGRect) {
+        print(#function)
         super.init(frame: frame)
         self.layoutViews()
-        activityIndicator.startAnimating()
+     
     }
 
     required init?(coder: NSCoder) {
@@ -85,7 +86,11 @@ class CTItemCell: UICollectionViewCell {
     
     override func prepareForReuse() {
         super.prepareForReuse()
-        
+        titleLabel.text = nil
+        copyrightLabel.text = nil
+        dateLabel.text = nil
+        itemImageView.image = nil
+        activityIndicator.startAnimating()
     }
 
 }
@@ -108,8 +113,8 @@ extension CTItemCell {
             activityIndicator.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
             activityIndicator.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
             
-            labelsStackView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 5),
-            labelsStackView.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
+            labelsStackView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 10),
+            labelsStackView.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor, constant: 5),
             labelsStackView.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
          
         ])

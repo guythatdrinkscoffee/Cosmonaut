@@ -8,22 +8,48 @@
 import UIKit
 import Combine
 
-
-
 class CTItemsViewController: UIViewController {
     // MARK: - Properties
-    private var items: [Item] = Array(Item.initFromJsonFile().reversed())
+    private var items: [Item] = []
     private var datasource: UICollectionViewDiffableDataSource<AnyHashable,Item>!
     private var imageService = ImageService()
     private var cancellables = Set<AnyCancellable>()
+    private var apodService = ApodService()
+    private var nextStartDate = Date()
+    private var calendar = Calendar.current
+    private var isFetching = false
+    private var fetchDayRange = -3
+    
     private lazy var discoverCollectionView : UICollectionView = {
-        
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: configureFlowLayout())
         collectionView.register(CTItemCell.self, forCellWithReuseIdentifier: CTItemCell.reuseIdentifer)
         collectionView.translatesAutoresizingMaskIntoConstraints = false
         collectionView.dataSource = datasource
         collectionView.delegate = self
         return collectionView
+    }()
+    
+    private lazy var activityIndicator : UIActivityIndicatorView = {
+        let view = UIActivityIndicatorView(style: .whiteLarge)
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+    
+    private lazy var dateFormatter : DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.calendar = self.calendar
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter
+    }()
+    
+    private lazy var displaySegmentedControl : UISegmentedControl = {
+        let control = UISegmentedControl(items: [
+            UIImage(systemName: "rectangle.portrait")!,
+            UIImage(systemName: "square.grid.3x3")!
+        ])
+        control.frame = CGRect(x: .zero, y: .zero, width: view.bounds.size.width / 2, height: .zero)
+        control.selectedSegmentIndex = 0
+        return control
     }()
     
     private enum DisplayType {
@@ -41,12 +67,12 @@ class CTItemsViewController: UIViewController {
         
         // Layout
         self.layoutCollectionView()
+        
+        self.activityIndicator.startAnimating()
     }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        
-        self.updateCollectionView(items)
     }
 }
 
@@ -55,6 +81,7 @@ extension CTItemsViewController {
     private func configureViewController() {
         self.view.backgroundColor = .black
         self.tabBarItem = UITabBarItem(title: "Discover", image: UIImage(systemName: "moon.stars"), tag: 0)
+        self.navigationItem.titleView = displaySegmentedControl
     }
     
     private func configureDataSource() {
@@ -89,12 +116,16 @@ extension CTItemsViewController {
 extension CTItemsViewController {
     private func layoutCollectionView(){
         self.view.addSubview(discoverCollectionView)
+        self.discoverCollectionView.addSubview(activityIndicator)
         
         NSLayoutConstraint.activate([
             discoverCollectionView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
             discoverCollectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             discoverCollectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            discoverCollectionView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
+            discoverCollectionView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
+            
+            self.activityIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            self.activityIndicator.centerYAnchor.constraint(equalTo: view.centerYAnchor)
         ])
     }
 }
@@ -107,7 +138,29 @@ extension CTItemsViewController {
         snapshot.appendSections(["Main"])
         snapshot.appendItems(items)
         
-        datasource.apply(snapshot)
+        datasource.apply(snapshot, animatingDifferences: true)
+    }
+    
+    private func fetchNextWeek(){
+        isFetching = true
+        let endDate = calendar.date(byAdding: DateComponents(day:fetchDayRange), to: nextStartDate)!
+        
+        let startDateFormatter = dateFormatter.string(from: nextStartDate)
+        let endDateFormatter = dateFormatter.string(from: endDate)
+        
+        nextStartDate = calendar.date(byAdding: DateComponents(day: -1), to: endDate)!
+        
+        apodService
+            .fetchInDateRange(start: endDateFormatter, end: startDateFormatter)
+            .receive(on: DispatchQueue.main)
+            .sink { completion in
+                self.isFetching = false
+                self.activityIndicator.stopAnimating()
+            } receiveValue: { items in
+                self.items.append(contentsOf: items)
+                self.updateCollectionView(self.items)
+            }
+            .store(in: &cancellables)
     }
 }
 
@@ -133,5 +186,21 @@ extension CTItemsViewController: UICollectionViewDelegate {
             }
             .store(in: &cancellables)
         
+    }
+}
+
+// MARK: - ScrollviewDelegate
+extension CTItemsViewController: UIScrollViewDelegate {
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        let yOffset = scrollView.contentOffset.y
+        
+        if yOffset > (discoverCollectionView.contentSize.height - 100) - scrollView.frame.size.height {
+            guard !isFetching else {
+                print("Already fetching")
+                return
+            }
+            
+            fetchNextWeek()
+        }
     }
 }

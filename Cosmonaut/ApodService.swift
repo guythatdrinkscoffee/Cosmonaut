@@ -38,7 +38,6 @@ struct ApodService {
             .dataTaskPublisher(for: url)
             .map(\.data)
             .map({ data in
-//                print(String(data: data, encoding: .utf8)!) 
                 return data
             })
             .print()
@@ -66,10 +65,6 @@ struct ApodService {
         return URLSession.shared
             .dataTaskPublisher(for: url)
             .map(\.data)
-//            .map({ data in
-//                print(String(data: data, encoding: .utf8)!)
-//                return data
-//            })
             .decode(type: Item.self, decoder: JSONDecoder())
             .eraseToAnyPublisher()
     }

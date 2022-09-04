@@ -8,6 +8,8 @@
 import UIKit
 import Combine
 
+
+
 class CTItemsViewController: UIViewController {
     // MARK: - Properties
     private var items: [Item] = []
@@ -18,19 +20,21 @@ class CTItemsViewController: UIViewController {
     private var nextStartDate = Date()
     private var calendar = Calendar.current
     private var isFetching = false
-    private var fetchDayRange = -3
+    private var fetchDayRange = -30
     
     private lazy var discoverCollectionView : UICollectionView = {
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: configureFlowLayout())
         collectionView.register(CTItemCell.self, forCellWithReuseIdentifier: CTItemCell.reuseIdentifer)
         collectionView.translatesAutoresizingMaskIntoConstraints = false
         collectionView.dataSource = datasource
+        collectionView.prefetchDataSource = self
         collectionView.delegate = self
+        collectionView.showsVerticalScrollIndicator = false
         return collectionView
     }()
     
     private lazy var activityIndicator : UIActivityIndicatorView = {
-        let view = UIActivityIndicatorView(style: .whiteLarge)
+        let view = UIActivityIndicatorView(style: .large)
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
@@ -42,21 +46,7 @@ class CTItemsViewController: UIViewController {
         return formatter
     }()
     
-    private lazy var displaySegmentedControl : UISegmentedControl = {
-        let control = UISegmentedControl(items: [
-            UIImage(systemName: "rectangle.portrait")!,
-            UIImage(systemName: "square.grid.3x3")!
-        ])
-        control.frame = CGRect(x: .zero, y: .zero, width: view.bounds.size.width / 2, height: .zero)
-        control.selectedSegmentIndex = 0
-        return control
-    }()
-    
-    private enum DisplayType {
-        case portrait
-        case grid
-    }
-    
+
     // MARK: - Life Cycle
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -79,9 +69,11 @@ class CTItemsViewController: UIViewController {
 // MARK: - Configuration
 extension CTItemsViewController {
     private func configureViewController() {
-        self.view.backgroundColor = .black
-        self.tabBarItem = UITabBarItem(title: "Discover", image: UIImage(systemName: "moon.stars"), tag: 0)
-        self.navigationItem.titleView = displaySegmentedControl
+        self.view.backgroundColor = .systemBackground
+        self.title = "Discover"
+        self.navigationController?.navigationBar.prefersLargeTitles = true
+        self.navigationController?.navigationBar.isTranslucent = true
+        self.navigationController?.edgesForExtendedLayout = .all
     }
     
     private func configureDataSource() {
@@ -92,18 +84,20 @@ extension CTItemsViewController {
     }
     
     private func configureFlowLayout() -> UICollectionViewCompositionalLayout {
-        let layout = UICollectionViewCompositionalLayout { section, layoutEnvironment in
+        let layout = UICollectionViewCompositionalLayout { section, layoutEnvironment in            
+            let itemSize = NSCollectionLayoutSize(
+                widthDimension: .fractionalWidth(1.0) ,
+                heightDimension: .fractionalHeight(1))
             
-            
-            let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .fractionalHeight(1.0))
             let item = NSCollectionLayoutItem(layoutSize: itemSize)
             
-            let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .fractionalHeight(1.0))
+            let groupSize = NSCollectionLayoutSize(
+                widthDimension: .fractionalWidth(1),
+                heightDimension: .fractionalHeight(0.8))
+            
             let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
             
-            
             let section = NSCollectionLayoutSection(group: group)
-            
             return section
         }
         
@@ -163,7 +157,6 @@ extension CTItemsViewController {
             .store(in: &cancellables)
     }
 }
-
 // MARK: - UICollectionViewDelegate
 extension CTItemsViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
@@ -172,10 +165,10 @@ extension CTItemsViewController: UICollectionViewDelegate {
         imageService.fetchImageForItem(item)
             .receive(on: DispatchQueue.main)
             .sink { completion in
-                
+ 
             } receiveValue: { [weak self] image in
                 ImageStore.shared.insert(key: NSString(string: item.imageURL.absoluteString), image: image)
-                
+
                 if let index = self?.items.firstIndex(of: item) {
                     let idx = IndexPath(item: index, section: 0)
                     if let cell = self?.discoverCollectionView.cellForItem(at: idx) as? CTItemCell {
@@ -187,6 +180,41 @@ extension CTItemsViewController: UICollectionViewDelegate {
             .store(in: &cancellables)
         
     }
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        guard let cell = discoverCollectionView.cellForItem(at: indexPath) as? CTItemCell,
+              let itemImage = cell.itemImageView.image else { return }
+        
+        let item = items[indexPath.row]
+        let detailViewController = CTItemDetailView(item: item, itemImage: itemImage)
+        navigationController?.pushViewController(detailViewController, animated: true)
+    }
+}
+
+// MARK: - UICollectionViewPrefetching
+extension CTItemsViewController: UICollectionViewDataSourcePrefetching {
+    func collectionView(_ collectionView: UICollectionView, prefetchItemsAt indexPaths: [IndexPath]) {
+        for indexPath in indexPaths {
+            let item = items[indexPath.row]
+            
+            imageService.fetchImageForItem(item)
+                .receive(on: DispatchQueue.main)
+                .sink { completion in
+                    
+                } receiveValue: { [weak self] image in
+                    ImageStore.shared.insert(key: NSString(string: item.imageURL.absoluteString), image: image)
+                    
+                    if let index = self?.items.firstIndex(of: item) {
+                        let idx = IndexPath(item: index, section: 0)
+                        if let cell = self?.discoverCollectionView.cellForItem(at: idx) as? CTItemCell {
+                            cell.item = item
+                            cell.updateWithImage(image)
+                        }
+                    }
+                }
+                .store(in: &cancellables)
+        }
+    }
 }
 
 // MARK: - ScrollviewDelegate
@@ -194,12 +222,11 @@ extension CTItemsViewController: UIScrollViewDelegate {
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         let yOffset = scrollView.contentOffset.y
         
-        if yOffset > (discoverCollectionView.contentSize.height - 100) - scrollView.frame.size.height {
+        if yOffset > (discoverCollectionView.contentSize.height - 300) - scrollView.frame.size.height {
             guard !isFetching else {
-                print("Already fetching")
                 return
             }
-            
+
             fetchNextWeek()
         }
     }

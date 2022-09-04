@@ -17,47 +17,48 @@ class CTItemCell: UICollectionViewCell {
         }
     }
     
-    private lazy var itemImageView : UIImageView = {
-        let imageView = UIImageView()
-        imageView.translatesAutoresizingMaskIntoConstraints = false
-        imageView.contentMode = .scaleAspectFill
-        return imageView
-    }()
-    
-    public lazy var activityIndicator : UIActivityIndicatorView = {
-        let view = UIActivityIndicatorView(style: .whiteLarge)
+    private lazy var containerView : UIView = {
+        let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
     
-    private lazy var gradient : CAGradientLayer = {
-        let layer = CAGradientLayer()
-        layer.frame = contentView.bounds
-        layer.colors = [UIColor.black.withAlphaComponent(0.7).cgColor,
-                        UIColor.black.withAlphaComponent(0).cgColor]
-        return layer
+    public lazy var itemImageView : UIImageView = {
+        let imageView = UIImageView()
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        imageView.contentMode = .scaleAspectFill
+        imageView.clipsToBounds = true
+        return imageView
+    }()
+
+    
+    public lazy var activityIndicator : UIActivityIndicatorView = {
+        let view = UIActivityIndicatorView(style: .large)
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
     }()
     
     private lazy var titleLabel : UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
-        label.font = .systemFont(ofSize: 14, weight: .bold)
-        label.textColor = .systemGray
+        label.font = .systemFont(ofSize: 18, weight: .bold)
+        label.textColor = .white
+        label.numberOfLines = 0
         return label
     }()
     
     private lazy var copyrightLabel : UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
-        label.font = .preferredFont(forTextStyle: .footnote)
-        label.textColor = .systemGray
+        label.font = .preferredFont(forTextStyle: .headline)
+        label.textColor = .white
         return label
     }()
     
     private lazy var dateLabel : UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
-        label.font = .preferredFont(forTextStyle: .footnote)
+        label.font = .preferredFont(forTextStyle: .headline)
         label.textColor = .systemGray
         return label
     }()
@@ -71,17 +72,24 @@ class CTItemCell: UICollectionViewCell {
         return stackView
     }()
     
+    private lazy var gradient : CAGradientLayer = {
+        let layer = CAGradientLayer()
+        layer.colors = [UIColor.black.withAlphaComponent(1).cgColor, UIColor.black
+            .withAlphaComponent(0).cgColor]
+        layer.frame = contentView.frame
+        layer.locations = [0.0, 0.5]
+        return layer
+    }()
+    
     // MARK: - Life cycle
     override init(frame: CGRect) {
-        print(#function)
         super.init(frame: frame)
         self.layoutViews()
-     
+        activityIndicator.startAnimating()
     }
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
-        
     }
     
     override func prepareForReuse() {
@@ -92,31 +100,28 @@ class CTItemCell: UICollectionViewCell {
         itemImageView.image = nil
         activityIndicator.startAnimating()
     }
-
+    
 }
 
 // MARK: - Layout
 extension CTItemCell {
     public func layoutViews(){
-        contentView.addSubview(itemImageView)
+        contentView.addSubview(containerView)
         contentView.addSubview(activityIndicator)
         contentView.layer.insertSublayer(gradient, at: 1)
         contentView.addSubview(labelsStackView)
-        backgroundColor = .black.withAlphaComponent(0.2)
+        containerView.addSubview(itemImageView)
+        
+        containerView.pinTo(contentView)
+        itemImageView.pinTo(containerView)
         
         NSLayoutConstraint.activate([
-            itemImageView.topAnchor.constraint(equalTo: contentView.topAnchor),
-            itemImageView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
-            itemImageView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
-            itemImageView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
-            
             activityIndicator.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
             activityIndicator.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
             
-            labelsStackView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 10),
-            labelsStackView.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor, constant: 5),
+            labelsStackView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 15),
+            labelsStackView.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor, constant: 10),
             labelsStackView.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
-         
         ])
     }
 }
@@ -126,7 +131,6 @@ extension CTItemCell {
     public func updateWithImage(_ image: UIImage){
         DispatchQueue.main.async {
             self.itemImageView.image = image
-            self.configureForItem()
             self.activityIndicator.stopAnimating()
         }
     }
@@ -139,5 +143,6 @@ extension CTItemCell {
         titleLabel.text = item.title
         copyrightLabel.text = item.copyright
         dateLabel.text = item.date
+        dateLabel.textColor = .gray
     }
 }

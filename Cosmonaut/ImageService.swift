@@ -14,8 +14,6 @@ final class ImageService {
         case unknown
     }
     
-    
-    
     public func fetchImageForItem(_ item: Item) -> AnyPublisher<UIImage, Error> {
         let url = item.imageURL
         

@@ -11,7 +11,6 @@
 		BE4D3E2328ADBABB00D8FE2B /* CTItemDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE4D3E2228ADBABB00D8FE2B /* CTItemDetailView.swift */; };
 		BE4D3E2528AEC9D900D8FE2B /* CTArchiveViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE4D3E2428AEC9D900D8FE2B /* CTArchiveViewController.swift */; };
 		BE4D3E2C28AEE83600D8FE2B /* CTCalendarViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE4D3E2B28AEE83600D8FE2B /* CTCalendarViewController.swift */; };
-		BE4D3E2E28AEF58F00D8FE2B /* CTCalendarCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE4D3E2D28AEF58F00D8FE2B /* CTCalendarCell.swift */; };
 		BE4D3E3628B0137D00D8FE2B /* CTArchiveItemCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE4D3E3528B0137D00D8FE2B /* CTArchiveItemCell.swift */; };
 		BE4D3E3928B08B0500D8FE2B /* UIFont+Ext.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE4D3E3828B08B0500D8FE2B /* UIFont+Ext.swift */; };
 		BE4D3E3B28B0A9D300D8FE2B /* DownloadService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE4D3E3A28B0A9D300D8FE2B /* DownloadService.swift */; };
@@ -33,7 +32,6 @@
 		BE4D3E2228ADBABB00D8FE2B /* CTItemDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CTItemDetailView.swift; sourceTree = "<group>"; };
 		BE4D3E2428AEC9D900D8FE2B /* CTArchiveViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CTArchiveViewController.swift; sourceTree = "<group>"; };
 		BE4D3E2B28AEE83600D8FE2B /* CTCalendarViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CTCalendarViewController.swift; sourceTree = "<group>"; };
-		BE4D3E2D28AEF58F00D8FE2B /* CTCalendarCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CTCalendarCell.swift; sourceTree = "<group>"; };
 		BE4D3E3528B0137D00D8FE2B /* CTArchiveItemCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CTArchiveItemCell.swift; sourceTree = "<group>"; };
 		BE4D3E3828B08B0500D8FE2B /* UIFont+Ext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIFont+Ext.swift"; sourceTree = "<group>"; };
 		BE4D3E3A28B0A9D300D8FE2B /* DownloadService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadService.swift; sourceTree = "<group>"; };
@@ -156,7 +154,6 @@
 			isa = PBXGroup;
 			children = (
 				BE95D7FA28AD6201004E9FA6 /* CTItemCell.swift */,
-				BE4D3E2D28AEF58F00D8FE2B /* CTCalendarCell.swift */,
 				BE4D3E3528B0137D00D8FE2B /* CTArchiveItemCell.swift */,
 			);
 			name = Views;
@@ -237,7 +234,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				BE4D3E2E28AEF58F00D8FE2B /* CTCalendarCell.swift in Sources */,
 				BE95D7F828AD5DD8004E9FA6 /* Item.swift in Sources */,
 				BE4D3E2C28AEE83600D8FE2B /* CTCalendarViewController.swift in Sources */,
 				BE95D7F028AD5D51004E9FA6 /* CTMainTabVC.swift in Sources */,
